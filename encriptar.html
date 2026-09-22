@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Máquina Criptográfica TIPO-E</title>
+    
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Carga de CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- Fuentes Retro: Special Elite (Etiquetas) y Courier Prime (Papel) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Variables y Configuración base */
+        :root {
+            --military-green: #4b5320;
+            --military-dark: #2c3315;
+            --brass-light: #d4af37;
+            --brass-dark: #8a6306;
+            --paper-bg: #e8dcc4;
+            --metal-dark: #1a1a1a;
+        }
+
+        body {
+            /* Fondo de mesa de madera oscura/metal gastado */
+            background-color: #1a1612;
+            background-image: 
+                radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%),
+                repeating-linear-gradient(0deg, #1c1814, #1c1814 2px, #14110e 2px, #14110e 4px);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Special Elite', cursive;
+            padding: 1rem;
+            color: #d1d5db;
+        }
+
+        .font-typewriter {
+            font-family: 'Courier Prime', monospace;
+        }
+
+        /* Carcasa de la máquina */
+        .machine-chassis {
+            background-color: var(--military-green);
+            background-image: 
+                /* Ruido sutil para textura de metal pintado */
+                url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.08"/%3E%3C/svg%3E'),
+                /* Sombras y luces volumétricas */
+                linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.4) 100%);
+            border: 4px solid var(--military-dark);
+            border-radius: 12px;
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.9), 
+                inset 0 8px 10px rgba(255,255,255,0.15), 
+                inset 0 -8px 15px rgba(0,0,0,0.6);
+            position: relative;
+        }
+
+        /* Placa de bronce */
+        .brass-plate {
+            background: linear-gradient(135deg, var(--brass-light) 0%, #b8860b 50%, var(--brass-dark) 100%);
+            border: 2px solid #5a4311;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.7), inset 1px 1px 2px rgba(255,255,255,0.6);
+            color: #2a1f00;
+            text-shadow: -1px -1px 0 rgba(255,255,255,0.3), 1px 1px 0 rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        /* Tornillos */
+        .screw {
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #999, #444);
+            border-radius: 50%;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.8);
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .screw::after {
+            content: '';
+            width: 70%;
+            height: 2px;
+            background: #111;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.3);
+            transform: rotate(45deg);
+        }
+
+        /* Papel antiguo (Inputs) */
+        .vintage-paper {
+            background-color: var(--paper-bg);
+            background-image: 
+                linear-gradient(transparent 95%, rgba(0,0,0,0.1) 100%),
+                url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="n"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23n)" opacity="0.05"/%3E%3C/svg%3E');
+            background-size: 100% 1.5rem, cover;
+            line-height: 1.5rem;
+            color: #1a1a1a;
+            border: none;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.3);
+            text-shadow: 0px 0px 1px rgba(0,0,0,0.3); /* Efecto de tinta */
+            resize: none;
+            outline: none;
+        }
+        .vintage-paper::placeholder {
+            color: rgba(26, 26, 26, 0.4);
+        }
+
+        /* Clip metálico que sujeta el papel */
+        .paper-clip {
+            background: linear-gradient(to bottom, #d1d5db, #6b7280);
+            height: 12px;
+            width: 60%;
+            margin: 0 auto;
+            border-radius: 2px;
+            border: 1px solid #374151;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.8);
+            position: absolute;
+            top: -6px;
+            left: 20%;
+            z-index: 10;
+        }
+
+        /* Botón de Acción Mecánico (Rojo) */
+        .mechanical-btn {
+            background: radial-gradient(circle at 30% 30%, #ff4444 0%, #aa0000 70%, #550000 100%);
+            border: 4px solid var(--metal-dark);
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            color: #fff;
+            text-shadow: 1px 1px 2px black;
+            font-weight: bold;
+            letter-spacing: 2px;
+            box-shadow: 
+                0 8px 0 #3a0000, 
+                0 15px 20px rgba(0,0,0,0.8),
+                inset 0 4px 5px rgba(255,255,255,0.3);
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mechanical-btn:active, .mechanical-btn.sim-active {
+            transform: translateY(8px);
+            box-shadow: 
+                0 0 0 #3a0000, 
+                0 5px 10px rgba(0,0,0,0.8),
+                inset 0 6px 10px rgba(0,0,0,0.6);
+            background: radial-gradient(circle at 30% 30%, #cc0000 0%, #880000 70%, #440000 100%);
+        }
+
+        /* Luces indicadoras (LEDs antiguos) */
+        .indicator-light {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #555, #111);
+            border: 3px solid #222;
+            box-shadow: 0 0 0 2px #444, inset 0 0 10px #000;
+            transition: all 0.2s;
+        }
+        .light-red {
+            background: radial-gradient(circle at 30% 30%, #ffaaaa, #cc0000, #330000);
+            box-shadow: 0 0 15px 5px rgba(255,0,0,0.6), inset 0 0 5px #000;
+        }
+        .light-green {
+            background: radial-gradient(circle at 30% 30%, #aaffaa, #00cc00, #003300);
+            box-shadow: 0 0 15px 5px rgba(0,255,0,0.6), inset 0 0 5px #000;
+        }
+        .light-yellow {
+            background: radial-gradient(circle at 30% 30%, #ffffaa, #cccc00, #333300);
+            box-shadow: 0 0 15px 5px rgba(255,255,0,0.6), inset 0 0 5px #000;
+        }
+
+        /* Interruptor de Palanca (Toggle Switch) */
+        .toggle-track {
+            background: #111;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.2);
+            border-radius: 20px;
+            position: relative;
+            border: 2px solid #2a2a2a;
+        }
+        .toggle-handle {
+            background: linear-gradient(to bottom, #f3f4f6, #9ca3af, #4b5563);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.9);
+            border: 1px solid #1f2937;
+            border-radius: 50%;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Rotación sutil para dar efecto 3D al moverse */
+        #mode-toggle:checked ~ div .toggle-handle {
+            transform: translateX(2.5rem) rotate(45deg);
+        }
+        #mode-toggle:not(:checked) ~ div .toggle-handle {
+            transform: translateX(0) rotate(-45deg);
+        }
+
+        /* Contenedor metálico profundo para inputs de clave */
+        .inset-metal-slot {
+            background: #111;
+            box-shadow: inset 0 6px 12px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.1);
+            border: 2px solid #222;
+        }
+
+        /* Custom Scrollbar for vintage paper */
+        .vintage-paper::-webkit-scrollbar {
+            width: 12px;
+        }
+        .vintage-paper::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1); 
+            border-left: 1px solid rgba(0,0,0,0.2);
+        }
+        .vintage-paper::-webkit-scrollbar-thumb {
+            background: #a0937d; 
+            border: 1px solid #736856;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="machine-chassis w-full max-w-4xl p-6 md:p-10 flex flex-col gap-8">
+        
+        <!-- Tornillos de las esquinas -->
+        <div class="screw top-4 left-4" style="transform: rotate(12deg)"></div>
+        <div class="screw top-4 right-4" style="transform: rotate(-34deg)"></div>
+        <div class="screw bottom-4 left-4" style="transform: rotate(88deg)"></div>
+        <div class="screw bottom-4 right-4" style="transform: rotate(45deg)"></div>
+
+        <!-- Encabezado / Placa de Bronce -->
+        <div class="brass-plate mx-auto px-8 py-3 rounded text-center w-full max-w-lg mt-2 flex items-center justify-between">
+            <div class="screw relative w-3 h-3" style="transform: rotate(20deg)"></div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-widest m-0">MÁQUINA CRIPTOGRÁFICA</h1>
+                <p class="text-xs tracking-[0.3em] font-bold opacity-80 border-t border-[#8a6306] mt-1 pt-1">MODELO TIPO-E</p>
+            </div>
+            <div class="screw relative w-3 h-3" style="transform: rotate(70deg)"></div>
+        </div>
+
+        <!-- Panel de Control Central -->
+        <div class="bg-[#333a18] p-6 rounded-lg border-2 border-[#1a1e0b] box-shadow-inner flex flex-col md:flex-row gap-8 items-center justify-between shadow-[inset_0_10px_20px_rgba(0,0,0,0.5)]">
+            
+            <!-- Modo Toggle -->
+            <div class="flex flex-col items-center gap-2">
+                <span class="text-sm font-bold tracking-widest text-[#a8b387] uppercase text-shadow-sm">Operación</span>
+                <div class="flex items-center gap-3 bg-[#1e220e] px-4 py-2 rounded border border-[#111] shadow-[0_2px_5px_rgba(0,0,0,0.5)]">
+                    <span id="label-enc" class="text-white font-bold text-sm transition-colors">CIFRAR</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="mode-toggle" class="sr-only">
+                        <div class="toggle-track w-16 h-6 flex items-center p-0.5">
+                            <div class="toggle-handle w-6 h-6 rounded-full absolute -left-1 shadow-lg"></div>
+                        </div>
+                    </label>
+                    <span id="label-dec" class="text-[#555] font-bold text-sm transition-colors">DESCIFRAR</span>
+                </div>
+            </div>
+
+            <!-- Entrada de Clave de Cifrado -->
+            <div class="flex-1 w-full flex flex-col items-center gap-2">
+                <span class="text-sm font-bold tracking-widest text-[#a8b387] uppercase text-shadow-sm flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-red-800"></span>
+                    Clave Secreta
+                    <span class="inline-block w-2 h-2 rounded-full bg-red-800"></span>
+                </span>
+                <div class="inset-metal-slot w-full max-w-sm rounded p-1.5 flex items-center">
+                    <input type="password" id="secret-key" 
+                        class="w-full bg-transparent border-none outline-none font-typewriter text-green-500 text-lg px-2 placeholder-green-900/50 text-center uppercase tracking-widest"
+                        placeholder="[ INSERTE CÓDIGO ]" autocomplete="off">
+                </div>
+                <p class="text-[10px] text-[#8b9668] tracking-widest uppercase">Req. para ambas operaciones</p>
+            </div>
+
+            <!-- Panel de Estado (Luces) -->
+            <div class="flex flex-col items-center gap-3">
+                <span class="text-sm font-bold tracking-widest text-[#a8b387] uppercase text-shadow-sm">Estado</span>
+                <div class="flex gap-4 bg-[#1e220e] p-3 rounded border border-[#111] shadow-[0_2px_5px_rgba(0,0,0,0.5)]">
+                    <div class="flex flex-col items-center gap-1">
+                        <div id="light-error" class="indicator-light"></div>
+                        <span class="text-[9px] text-red-400">ERR</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div id="light-process" class="indicator-light"></div>
+                        <span class="text-[9px] text-yellow-400">PRC</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div id="light-success" class="indicator-light"></div>
+                        <span class="text-[9px] text-green-400">OK</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área Inferior: Papeles y Botón -->
+        <div class="flex flex-col md:flex-row gap-6 items-stretch">
+            
+            <!-- Papel de Entrada -->
+            <div class="flex-1 relative bg-[#2a3014] p-3 rounded border-2 border-[#1a1e0b] shadow-[inset_0_5px_15px_rgba(0,0,0,0.8)] flex flex-col">
+                <span class="text-xs font-bold tracking-widest text-[#a8b387] uppercase mb-2 ml-1">Documento Original</span>
+                <div class="relative flex-1 flex flex-col">
+                    <div class="paper-clip"></div>
+                    <textarea id="input-text" 
+                        class="vintage-paper w-full h-full min-h-[150px] p-4 pt-6 text-sm font-typewriter font-bold"
+                        placeholder="Escriba el mensaje aquí..."></textarea>
+                </div>
+            </div>
+
+            <!-- Botón de Ejecución (Centro) -->
+            <div class="flex flex-col justify-center items-center py-4 md:py-0 px-2 relative z-10">
+                <div class="bg-[#1a1e0b] p-3 rounded-full shadow-[0_5px_15px_rgba(0,0,0,0.8)] border border-[#333]">
+                    <div id="action-btn" class="mechanical-btn">
+                        <span id="btn-text" class="transform -translate-y-1">INICIAR</span>
+                    </div>
+                </div>
+                <!-- Pequeña placa indicadora debajo del botón -->
+                <div class="mt-4 bg-[#111] px-3 py-1 rounded border border-[#333] shadow-[inset_0_2px_4px_rgba(0,0,0,1)]">
+                    <span id="action-label" class="text-xs text-red-500 font-bold tracking-widest font-typewriter">MECANISMO: CIFRAR</span>
+                </div>
+            </div>
+
+            <!-- Papel de Salida -->
+            <div class="flex-1 relative bg-[#2a3014] p-3 rounded border-2 border-[#1a1e0b] shadow-[inset_0_5px_15px_rgba(0,0,0,0.8)] flex flex-col">
+                <div class="flex justify-between items-end mb-2 ml-1 mr-1">
+                    <span class="text-xs font-bold tracking-widest text-[#a8b387] uppercase">Resultado Procesado</span>
+                    <button id="btn-copy" class="bg-[#4b5320] hover:bg-[#5c6628] text-[#e8dcc4] text-[10px] uppercase font-bold tracking-widest px-2 py-1 rounded border border-[#1a1e0b] shadow-[0_2px_4px_rgba(0,0,0,0.5)] active:translate-y-px active:shadow-none transition-all">
+                        Copiar
+                    </button>
+                </div>
+                <div class="relative flex-1 flex flex-col">
+                    <div class="paper-clip"></div>
+                    <textarea id="output-text" readonly
+                        class="vintage-paper w-full h-full min-h-[150px] p-4 pt-6 text-sm font-typewriter font-bold cursor-text"
+                        placeholder="Esperando transmisión..."></textarea>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // DOM Elements
+        const elements = {
+            modeToggle: document.getElementById('mode-toggle'),
+            labelEnc: document.getElementById('label-enc'),
+            labelDec: document.getElementById('label-dec'),
+            actionLabel: document.getElementById('action-label'),
+            btnText: document.getElementById('btn-text'),
+            secretKey: document.getElementById('secret-key'),
+            inputText: document.getElementById('input-text'),
+            outputText: document.getElementById('output-text'),
+            actionBtn: document.getElementById('action-btn'),
+            btnCopy: document.getElementById('btn-copy'),
+            lightError: document.getElementById('light-error'),
+            lightProcess: document.getElementById('light-process'),
+            lightSuccess: document.getElementById('light-success')
+        };
+
+        // Audio simulation (Visual feedback since audio files aren't allowed)
+        // We simulate the "clack clack" of a machine by shaking the button and flashing lights
+        
+        let isEncryptMode = true;
+
+        // Reset lights
+        function resetLights() {
+            elements.lightError.className = 'indicator-light';
+            elements.lightProcess.className = 'indicator-light';
+            elements.lightSuccess.className = 'indicator-light';
+        }
+
+        // Set specific light
+        function setLight(type) {
+            resetLights();
+            if (type === 'error') elements.lightError.classList.add('light-red');
+            if (type === 'process') elements.lightProcess.classList.add('light-yellow');
+            if (type === 'success') elements.lightSuccess.classList.add('light-green');
+        }
+
+        // Handle Mode Toggle
+        elements.modeToggle.addEventListener('change', (e) => {
+            isEncryptMode = !e.target.checked; // checked = decrypt
+            
+            // Visual updates for toggle labels
+            if (isEncryptMode) {
+                elements.labelEnc.className = 'text-white font-bold text-sm transition-colors';
+                elements.labelDec.className = 'text-[#555] font-bold text-sm transition-colors';
+                elements.actionLabel.textContent = 'MECANISMO: CIFRAR';
+                elements.actionLabel.className = 'text-xs text-red-500 font-bold tracking-widest font-typewriter';
+            } else {
+                elements.labelEnc.className = 'text-[#555] font-bold text-sm transition-colors';
+                elements.labelDec.className = 'text-white font-bold text-sm transition-colors';
+                elements.actionLabel.textContent = 'MECANISMO: DESCIFRAR';
+                elements.actionLabel.className = 'text-xs text-green-500 font-bold tracking-widest font-typewriter';
+            }
+            
+            // Clear outputs
+            elements.outputText.value = '';
+            resetLights();
+        });
+
+        // Machine processing animation
+        function simulateProcessing(callback) {
+            elements.actionBtn.classList.add('sim-active');
+            let blinks = 0;
+            elements.outputText.value = '';
+            elements.outputText.placeholder = 'Procesando engranajes...';
+            
+            const blinkInterval = setInterval(() => {
+                if (blinks % 2 === 0) {
+                    setLight('process');
+                } else {
+                    resetLights();
+                }
+                blinks++;
+                
+                if (blinks > 5) { // Stop after ~500ms
+                    clearInterval(blinkInterval);
+                    elements.actionBtn.classList.remove('sim-active');
+                    callback();
+                }
+            }, 100);
+        }
+
+        // Action Button Click
+        elements.actionBtn.addEventListener('click', () => {
+            const text = elements.inputText.value.trim();
+            const key = elements.secretKey.value;
+
+            if (!text || !key) {
+                setLight('error');
+                elements.outputText.value = 'ERROR: Faltan datos (Texto o Clave).';
+                return;
+            }
+
+            simulateProcessing(() => {
+                try {
+                    let result = '';
+                    if (isEncryptMode) {
+                        result = CryptoJS.AES.encrypt(text, key).toString();
+                        elements.outputText.value = result;
+                        setLight('success');
+                    } else {
+                        const decryptedBytes = CryptoJS.AES.decrypt(text, key);
+                        result = decryptedBytes.toString(CryptoJS.enc.Utf8);
+                        
+                        if (!result) throw new Error("Clave incorrecta o texto dañado");
+                        
+                        elements.outputText.value = result;
+                        setLight('success');
+                    }
+                } catch (error) {
+                    setLight('error');
+                    elements.outputText.value = 'ERROR CRÍTICO: Imposible descifrar. Verifique la clave secreta o la integridad del texto.';
+                }
+            });
+        });
+
+        // Copy to clipboard
+        elements.btnCopy.addEventListener('click', () => {
+            const textToCopy = elements.outputText.value;
+            if (!textToCopy || textToCopy.startsWith('ERROR')) {
+                setLight('error');
+                return;
+            }
+
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            
+            try {
+                document.execCommand('copy');
+                // Temporary flash button green
+                const originalBg = elements.btnCopy.style.backgroundColor;
+                elements.btnCopy.style.backgroundColor = '#4ade80';
+                elements.btnCopy.style.color = '#000';
+                elements.btnCopy.textContent = 'COPIADO';
+                
+                setTimeout(() => {
+                    elements.btnCopy.style.backgroundColor = originalBg;
+                    elements.btnCopy.style.color = '';
+                    elements.btnCopy.textContent = 'COPIAR';
+                }, 1500);
+            } catch (err) {
+                setLight('error');
+            }
+            
+            document.body.removeChild(tempTextArea);
+        });
+
+        // Prevent spaces in secret key to avoid common errors
+        elements.secretKey.addEventListener('input', function() {
+            this.value = this.value.replace(/\s/g, '');
+        });
+    </script>
+</body>
+</html>
